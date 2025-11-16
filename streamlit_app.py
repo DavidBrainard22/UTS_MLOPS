@@ -111,8 +111,9 @@ if submitted:
     st.markdown("<h2>🔎 Hasil Prediksi</h2>", unsafe_allow_html=True)
 
     if pred == 1:
-        st.error(f"❤️ **Pasien berisiko penyakit jantung**  
-                 Probabilitas: **{prob:.2f}**")
+        st.error(f"""❤️ **Pasien berisiko penyakit jantung**
+        Probabilitas: **{prob:.2f}**""")
     else:
-        st.success(f"💚 **Pasien tidak berisiko penyakit jantung**  
-                 Probabilitas: **{prob:.2f}**")
+        st.success(f"""💚 **Pasien tidak berisiko penyakit jantung**
+        Probabilitas: **{prob:.2f}**""")
+
