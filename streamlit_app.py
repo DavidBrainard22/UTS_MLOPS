@@ -19,7 +19,7 @@ from sklearn.pipeline import Pipeline
 # CONFIG
 # -------------------------------------------------------
 st.set_page_config(page_title="Heart Disease Risk System", page_icon="❤️", layout="wide")
-
+DATA_PATH = "heart_cleveland_upload.csv"
 # -------------------------------------------------------
 # CSS Styling
 # -------------------------------------------------------
@@ -47,7 +47,7 @@ st.markdown("""
 # DATA LOADING
 # -------------------------------------------------------
 @st.cache_data
-def load_heart_data(path=heart_cleveland_upload.csv):
+def load_heart_data(path=DATA_PATH):
     try:
         df = pd.read_csv(path)
 
