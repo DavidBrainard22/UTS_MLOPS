@@ -35,14 +35,83 @@ def load_heart_data():
 
     return df
 
+# -----------------------
 # LOAD DATA
-df = load_heart_data()
+# -----------------------
+df_raw = load_heart_data()
 
-# TRAIN MODELS (tidak perlu model.pkl)
+# -----------------------
+# BASIC CLEANING + PREP
+# -----------------------
+df = df_raw.copy()
+
+if 'target' not in df.columns:
+    raise ValueError("Dataset must contain a 'target' column (atau 'num').")
+
+df['target'] = df['target'].apply(lambda x: 1 if (pd.notna(x) and x > 0) else 0)
+
+numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+for c in numeric_cols:
+    df[c] = df[c].fillna(df[c].median())
+
+feature_cols = [
+    "age","sex","cp","trestbps","chol","fbs","restecg","thalach",
+    "exang","oldpeak","slope","ca","thal","condition"
+]
+feature_cols = [c for c in feature_cols if c in df.columns]
+
+X = df[feature_cols]
+y = df['target']
+
+categorical_feats = [c for c in ["sex","cp","fbs","restecg","exang","slope","ca","thal","condition"] if c in X.columns]
+numeric_feats = [c for c in feature_cols if c not in categorical_feats]
+
+# -----------------------
+# BARU SETELAH X, y DIBUAT → TRAIN MODELS
+# -----------------------
 models = train_models(X, y)
 
 preprocessor = models["preprocessor"]
-model = models["rf"]   # RandomForest (atau ensemble, sesuai kebutuhan)
+model = models["rf"]
+# -----------------------
+# LOAD DATA
+# -----------------------
+df_raw = load_heart_data()
+
+# -----------------------
+# BASIC CLEANING + PREP
+# -----------------------
+df = df_raw.copy()
+
+if 'target' not in df.columns:
+    raise ValueError("Dataset must contain a 'target' column (atau 'num').")
+
+df['target'] = df['target'].apply(lambda x: 1 if (pd.notna(x) and x > 0) else 0)
+
+numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+for c in numeric_cols:
+    df[c] = df[c].fillna(df[c].median())
+
+feature_cols = [
+    "age","sex","cp","trestbps","chol","fbs","restecg","thalach",
+    "exang","oldpeak","slope","ca","thal","condition"
+]
+feature_cols = [c for c in feature_cols if c in df.columns]
+
+X = df[feature_cols]
+y = df['target']
+
+categorical_feats = [c for c in ["sex","cp","fbs","restecg","exang","slope","ca","thal","condition"] if c in X.columns]
+numeric_feats = [c for c in feature_cols if c not in categorical_feats]
+
+# -----------------------
+# BARU SETELAH X, y DIBUAT → TRAIN MODELS
+# -----------------------
+models = train_models(X, y)
+
+preprocessor = models["preprocessor"]
+model = models["rf"]
+
 
 
 # FORM INPUT PASIEN
