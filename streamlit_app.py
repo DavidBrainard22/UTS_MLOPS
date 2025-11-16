@@ -23,8 +23,7 @@ warnings.filterwarnings("ignore")
 # CONFIG / PATH
 # -----------------------
 st.set_page_config(page_title="Heart Disease Risk System", page_icon="❤️", layout="wide")
-DATA_PATH = "/mnt/data/heart_cleveland_upload.csv"  # file yang Anda upload
-
+DATA_PATH = DATA_PATH = "heart_cleveland_upload.csv"
 # -----------------------
 # CSS Styling
 # -----------------------
@@ -62,7 +61,6 @@ def load_heart_data(path=DATA_PATH):
             df = df.rename(columns={'heartdisease': 'target'})
         return df
     except Exception:
-        # try reading with explicit column names if default parse fails
         cols = [
             "age","sex","cp","trestbps","chol","fbs","restecg","thalach",
             "exang","oldpeak","slope","ca","thal","target"
