@@ -218,8 +218,7 @@ models = train_models(X, y)
 # -----------------------
 st.markdown('<div class="main-header">HEART DISEASE RISK PREDICTION</div>', unsafe_allow_html=True)
 
-
-    st.markdown('<div class="section-header">✏ Input Patient Parameters</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header">✏ Input Patient Parameters</div>', unsafe_allow_html=True)
 
     # helper: show description for some categorical fields
     cp_desc = {
