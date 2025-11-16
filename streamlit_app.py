@@ -35,28 +35,15 @@ def load_heart_data():
 
     return df
 
-
-
-# LOAD MODEL MLOPS
-@st.cache_resource
-def load_model():
-    model_path = Path("model.pkl")
-    if not model_path.exists():
-        st.error("❌ model.pkl tidak ditemukan!")
-        st.stop()
-
-    with open(model_path, "rb") as f:
-        models = pickle.load(f)
-
-    return models
-
-
-# Load everything
+# LOAD DATA
 df = load_heart_data()
-models = load_model()
+
+# TRAIN MODELS (tidak perlu model.pkl)
+models = train_models(X, y)
 
 preprocessor = models["preprocessor"]
-model = models["rf"]   # RandomForest
+model = models["rf"]   # RandomForest (atau ensemble, sesuai kebutuhan)
+
 
 # FORM INPUT PASIEN
 st.markdown("<h2>🧪 Input Data Pasien</h2>", unsafe_allow_html=True)
