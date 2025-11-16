@@ -218,49 +218,7 @@ models = train_models(X, y)
 # -----------------------
 st.markdown('<div class="main-header">HEART DISEASE RISK PREDICTION</div>', unsafe_allow_html=True)
 
-col1, col2 = st.columns([2, 1])
 
-# LEFT → Feature importance (only if RF trained and features available)
-with col1:
-    st.markdown('<div class="section-header">🔍 Model overview & Feature importance</div>', unsafe_allow_html=True)
-    rf = models["rf"]
-    fname = models["feature_names_transformed"]
-    if len(fname) == 0:
-        st.info("Tidak ada nama fitur hasil transformasi yang tersedia untuk menampilkan feature importance.")
-    else:
-        importances = rf.feature_importances_
-        imp_df = pd.DataFrame({
-            "feature": fname,
-            "importance": importances
-        }).sort_values("importance", ascending=True)
-
-        fig, ax = plt.subplots(figsize=(8, min(6, 0.3 * len(imp_df) + 1)))
-        ax.barh(imp_df["feature"], imp_df["importance"])
-        ax.set_xlabel("Importance")
-        ax.set_title("Feature Importance (setelah preprocessing)")
-        plt.tight_layout()
-        st.pyplot(fig)
-
-    # show model metrics summary
-    metrics = models["metrics"]
-    st.markdown('<div class="section-header">📊 Model summary</div>', unsafe_allow_html=True)
-    acc = metrics.get("accuracy", None)
-    roc = metrics.get("roc_auc", None)
-    st.markdown("<div class='metric'>", unsafe_allow_html=True)
-    st.write(f"Model ensemble: VotingClassifier (SVC linear, SVC rbf, LogisticRegression)")
-    if acc is not None:
-        st.write(f"Akurasi (pada test set): *{acc*100:.2f}%*")
-    else:
-        st.write("Akurasi: -")
-    if roc is not None:
-        st.write(f"ROC AUC: *{roc:.3f}*")
-    else:
-        st.write("ROC AUC: Tidak tersedia (mungkin hanya satu kelas pada test set).")
-    st.write("Catatan: metrik dihitung pada test split. Jika dataset kecil/imbalance, metrik dapat menyesatkan.")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# RIGHT → FORM INPUT
-with col2:
     st.markdown('<div class="section-header">✏ Input Patient Parameters</div>', unsafe_allow_html=True)
 
     # helper: show description for some categorical fields
