@@ -220,29 +220,28 @@ st.markdown('<div class="main-header">HEART DISEASE RISK PREDICTION</div>', unsa
 
 st.markdown('<div class="section-header">✏ Input Patient Parameters</div>', unsafe_allow_html=True)
 
-    # helper: show description for some categorical fields
-    cp_desc = {
-        0: "Typical angina",
-        1: "Atypical angina",
-        2: "Non-anginal pain",
-        3: "Asymptomatic"
-    }
-    restecg_desc = {
-        0: "Normal",
-        1: "ST-T wave abnormality",
-        2: "Left ventricular hypertrophy"
-    }
-    slope_desc = {
-        0: "Upsloping",
-        1: "Flat",
-        2: "Downsloping"
-    }
-    thal_desc = {
-        0: "Unknown",
-        1: "Normal",
-        2: "Fixed defect",
-        3: "Reversible defect"
-    }
+cp_desc = {
+    0: "Typical angina",
+    1: "Atypical angina",
+    2: "Non-anginal pain",
+    3: "Asymptomatic"
+}
+restecg_desc = {
+    0: "Normal",
+    1: "ST-T wave abnormality",
+    2: "Left ventricular hypertrophy"
+}
+slope_desc = {
+    0: "Upsloping",
+    1: "Flat",
+    2: "Downsloping"
+}
+thal_desc = {
+    0: "Unknown",
+    1: "Normal",
+    2: "Fixed defect",
+    3: "Reversible defect"
+}
 
     with st.form("input_form"):
         age = st.slider("Age", 20, 100, 55)
