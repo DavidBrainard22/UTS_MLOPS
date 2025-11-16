@@ -56,11 +56,11 @@ def load_heart_data(path=DATA_PATH):
         df = pd.read_csv(path)
            # Rename kolom target
         if "condition" in df.columns:
-        df = df.rename(columns={"condition": "target"})
+            df = df.rename(columns={"condition": "target"})
         elif "num" in df.columns:
-        df = df.rename(columns={"num": "target"})
+            df = df.rename(columns={"num": "target"})
         elif "target" not in df.columns:
-        raise ValueError("Dataset tidak memiliki kolom target ('condition', 'num', atau 'target').")
+            raise ValueError("Dataset tidak memiliki kolom target ('condition', 'num', atau 'target').")
         return df
     
     except Exception:
