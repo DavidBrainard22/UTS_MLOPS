@@ -18,15 +18,11 @@ import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
 
-# =======================
 # CONFIG
-# =======================
 st.set_page_config(page_title="Heart Disease Risk System", page_icon="❤️", layout="wide")
-DATA_PATH = "heart.csv"  # ganti jika file Anda beda. Fallback implemented.
+DATA_PATH = "heart_cleveland_upload.csv"
 
-# =======================
-# CSS (diadaptasi & disederhanakan)
-# =======================
+# CSS
 st.markdown("""
 <style>
 /* Basic card/header styling */
@@ -48,30 +44,23 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# =======================
 # DATA LOADING + PREP
-# =======================
 @st.cache_data
 def load_heart_data(path=DATA_PATH):
-    # try common heart csv name, else fallback to processed.cleveland.data layout
     try:
         df = pd.read_csv(path)
-        # If dataset uses "target" or "num" name variations, normalize
         if 'target' not in df.columns and 'num' in df.columns:
             df = df.rename(columns={'num': 'target'})
         if 'target' not in df.columns and 'heartdisease' in df.columns:
             df = df.rename(columns={'heartdisease': 'target'})
         return df
     except Exception:
-        # fallback reader for processed.cleveland.data from UCI (13 attributes + target)
         cols = [
             "age","sex","cp","trestbps","chol","fbs","restecg","thalach",
             "exang","oldpeak","slope","ca","thal","target"
         ]
         df = pd.read_csv("heart_cleveland_upload.csv", names=cols)
-        # replace '?' with NaN
         df = df.replace('?', np.nan)
-        # convert to numeric where possible
         for c in df.columns:
             df[c] = pd.to_numeric(df[c], errors='coerce')
         return df
@@ -80,54 +69,41 @@ df_raw = load_heart_data()
 
 # quick cleaning/prep
 df = df_raw.copy()
-# many versions use target values 0 (no disease) and 1-4 (disease severity). Convert to binary.
 if 'target' in df.columns:
     df['target'] = df['target'].apply(lambda x: 1 if x and x > 0 else 0)
 else:
     raise ValueError("Dataset must contain 'target' column. Periksa nama kolom file Anda.")
 
-# Drop rows with too many missing values, impute simple median for numeric
 numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-# keep only known columns (some csv variants might have extra)
-# Impute median for numeric columns
+
 for c in numeric_cols:
     if df[c].isnull().sum() > 0:
         df[c] = df[c].fillna(df[c].median())
 
-# =================================================
-# Features we'll use and which are categorical
-# =================================================
 feature_cols = [
     "age","sex","cp","trestbps","chol","fbs","restecg","thalach",
     "exang","oldpeak","slope","ca","thal"
 ]
-# Ensure all features exist (if file lacks some, adapt)
 feature_cols = [c for c in feature_cols if c in df.columns]
 
 X = df[feature_cols]
 y = df['target']
 
-# Categorical features (common in this dataset)
 categorical_feats = [c for c in ["sex","cp","fbs","restecg","exang","slope","ca","thal"] if c in X.columns]
 numeric_feats = [c for c in feature_cols if c not in categorical_feats]
 
-# Preprocessing pipeline: one-hot for categorical, scaler for numeric
 preprocessor = ColumnTransformer(transformers=[
     ("num", StandardScaler(), numeric_feats),
     ("cat", OneHotEncoder(handle_unknown='ignore'), categorical_feats)
 ], remainder='drop')
 
-# =======================
 # TRAIN / MODEL
-# =======================
 @st.cache_resource
 def train_models(X, y):
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.25, random_state=42, stratify=y
     )
 
-    # create pipelines for each base estimator to include preprocessing
-    # Note: SVCs need scaled features (we put in pipeline)
     svc_linear = Pipeline([
         ('pre', preprocessor),
         ('clf', SVC(kernel='linear', C=0.1, probability=True, random_state=42))
@@ -151,8 +127,6 @@ def train_models(X, y):
     # Fit ensemble
     ensemble.fit(X_train, y_train)
 
-    # Fit a RandomForest on preprocessed numeric/categorical encoded matrix for feature importance
-    # We need transformed X_train numeric matrix for RF; transform using preprocessor
     X_train_trans = preprocessor.fit_transform(X_train)
     rf = RandomForestClassifier(n_estimators=200, random_state=42)
     rf.fit(X_train_trans, y_train)
@@ -174,9 +148,6 @@ def train_models(X, y):
         'roc_curve': roc_curve(y_test, probs)
     }
 
-    # For feature importance mapping: we must recover feature names after one-hot encoding
-    # Build feature name array from preprocessor
-    # numeric_feats keep order; cat encoder categories:
     ohe = preprocessor.named_transformers_['cat']
     cat_feature_names = []
     if hasattr(ohe, 'categories_'):
@@ -197,22 +168,10 @@ def train_models(X, y):
 
 models = train_models(X, y)
 
-# =======================
 # UI / DASHBOARD
-# =======================
 st.markdown('<div class="main-header">HEART DISEASE RISK PREDICTION</div>', unsafe_allow_html=True)
 
-col1, col2 = st.columns([2,1])
-
-with col1:
-    st.markdown('<div class="section-header">📋 Dataset sample & basic stats</div>', unsafe_allow_html=True)
-    st.dataframe(df.head(8))
-
-    st.markdown('<div class="section-header">🧾 Class Balance</div>', unsafe_allow_html=True)
-    counts = df['target'].value_counts(normalize=True).rename({0:'No disease',1:'Disease'})*100
-    st.write(counts.round(2).astype(str) + '%')
-
-    st.markdown('<div class="section-header">📈 Feature Importance (Random Forest)</div>', unsafe_allow_html=True)
+col1, col2 = st.columns([0.1,1])
     # compute and plot feature importances
     rf = models['rf']
     fname = models['feature_names_transformed']
@@ -229,19 +188,20 @@ with col1:
 with col2:
     st.markdown('<div class="section-header">🔎 Input Patient Parameters</div>', unsafe_allow_html=True)
     with st.form('input_form'):
-        # Provide inputs for common heart attributes (defaults chosen sensibly)
+        # Provide inputs for common heart attributes
         age = st.slider('Age', 20, 100, 55)
         sex = st.selectbox('Sex', options=[0,1], format_func=lambda x: 'Male' if x==1 else 'Female')
         cp = st.selectbox('Chest pain type (cp)', options=[0,1,2,3], index=1)
         trestbps = st.number_input('Resting blood pressure (trestbps)', min_value=80, max_value=220, value=130)
         chol = st.number_input('Cholesterol (mg/dl)', min_value=100, max_value=600, value=246)
-        fbs = st.selectbox('Fasting blood sugar > 120 mg/dl (fbs)', options=[0,1])
+        fbs_label = st.selectbox('Fasting blood sugar > 120 mg/dl (fbs)', ['Tidak', 'Ya'])
+        fbs = 1 if fbs_label == 'Ya' else 0
         restecg = st.selectbox('Resting ECG (restecg)', options=[0,1,2])
         thalach = st.number_input('Max heart rate achieved (thalach)', min_value=60, max_value=230, value=150)
-        exang = st.selectbox('Exercise induced angina (exang)', options=[0,1])
+        exang_label = st.selectbox('Exercise induced angina (exang)', ['Tidak', 'Ya'])
+        exang = 1 if exang_label == 'Ya' else 0
         oldpeak = st.number_input('ST depression (oldpeak)', min_value=0.0, max_value=10.0, value=1.0, format="%.2f")
         slope = st.selectbox('Slope of peak exercise ST segment (slope)', options=[0,1,2])
-        # some datasets have 'ca' as int (0-4) and 'thal' as 1/2/3 or other
         ca = st.selectbox('Number of major vessels colored by fluoroscopy (ca)', options=[0,1,2,3,4])
         thal = st.selectbox('Thalassemia (thal)', options=[0,1,2,3])
 
@@ -287,39 +247,3 @@ with col2:
             advice = "Pertahankan gaya hidup sehat dan pemeriksaan berkala."
 
         st.markdown(f"<div class='metric' style='border-left:4px solid {color};'><div class='kpi'>{proba_pct:.1f}%</div><div class='small'>{risk_label}</div><div style='margin-top:8px'>{advice}</div></div>", unsafe_allow_html=True)
-
-# =======================
-# PERFORMANCE PANEL
-# =======================
-st.markdown('<div class="section-header">📊 Model Performance</div>', unsafe_allow_html=True)
-metrics = models['metrics']
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("Accuracy", f"{metrics['accuracy']*100:.2f}%")
-c2.metric("Precision", f"{metrics['precision']*100:.2f}%")
-c3.metric("Recall", f"{metrics['recall']*100:.2f}%")
-c4.metric("ROC AUC", f"{metrics['roc_auc']*100:.2f}%")
-
-# confusion matrix
-cm = metrics['confusion_matrix']
-fig2, ax2 = plt.subplots(figsize=(4,3))
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False, ax=ax2)
-ax2.set_xlabel('Predicted'); ax2.set_ylabel('Actual')
-st.pyplot(fig2)
-
-# ROC
-fpr, tpr, _ = metrics['roc_curve']
-fig3, ax3 = plt.subplots(figsize=(5,4))
-ax3.plot(fpr, tpr, label=f"AUC = {metrics['roc_auc']:.3f}")
-ax3.plot([0,1], [0,1], linestyle='--', color='grey')
-ax3.set_xlabel('False Positive Rate'); ax3.set_ylabel('True Positive Rate'); ax3.legend()
-st.pyplot(fig3)
-
-# =======================
-# FOOTER
-# =======================
-st.markdown("""
-<div style="margin-top:18px; padding:10px; border-top:1px solid #eee;">
-<small class="small">Catatan: Model ini dibuat untuk tujuan edukasi dan eksperimen; tidak boleh digunakan sebagai pengganti diagnosis profesional. Pastikan Anda menggunakan data yang valid dan melakukan validasi eksternal sebelum deployment klinis.</small>
-</div>
-""", unsafe_allow_html=True)
-
