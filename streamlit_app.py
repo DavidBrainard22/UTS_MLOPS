@@ -171,7 +171,7 @@ models = train_models(X, y)
 # UI / DASHBOARD
 st.markdown('<div class="main-header">HEART DISEASE RISK PREDICTION</div>', unsafe_allow_html=True)
 
-col1, col2 = st.columns([0.1,1])
+col1, col2 = st.columns([2,1])
     # compute and plot feature importances
     rf = models['rf']
     fname = models['feature_names_transformed']
