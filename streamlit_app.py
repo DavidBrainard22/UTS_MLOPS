@@ -367,21 +367,6 @@ with col2:
             unsafe_allow_html=True
         )
 
-        # additional info: which class means apa
-        st.markdown('<div class="section-header">ℹ Penjelasan label</div>', unsafe_allow_html=True)
-        st.write("*Label 0 (Tidak/No)*: Tidak terdeteksi tanda penyakit jantung menurut model.")
-        st.write("*Label 1 (Ya/Yes)*: Model mendeteksi potensi tanda penyakit jantung — perlu evaluasi medis lebih lanjut.")
-
-        # display which model was used and test-set accuracy
-        st.markdown('<div class="section-header">🧾 Info model</div>', unsafe_allow_html=True)
-        st.write("Prediksi dibuat oleh: *VotingClassifier (SVC rbf, LogisticRegression, SVC linear)* — voting soft (probabilities).")
-        acc = models["metrics"].get("accuracy", None)
-        if acc is not None:
-            st.write(f"Akurasi model pada test split: *{acc*100:.2f}%*")
-        else:
-            st.write("Akurasi model: tidak tersedia.")
-
-        # give per-class short guidance
         if pred == 1:
             st.warning("Hasil: *Terindikasi kemungkinan penyakit jantung.* Hasil ini bukan diagnosis definitif — segera konsultasi ke profesional medis untuk pemeriksaan lanjutan.")
         else:
