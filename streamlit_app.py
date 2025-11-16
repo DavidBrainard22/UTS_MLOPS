@@ -68,7 +68,7 @@ def load_heart_data(path=DATA_PATH):
             "age","sex","cp","trestbps","chol","fbs","restecg","thalach",
             "exang","oldpeak","slope","ca","thal","target"
         ]
-        df = pd.read_csv("processed.cleveland.data", names=cols)
+        df = pd.read_csv("heart_cleveland_upload", names=cols)
         # replace '?' with NaN
         df = df.replace('?', np.nan)
         # convert to numeric where possible
