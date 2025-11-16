@@ -243,87 +243,85 @@ thal_desc = {
     3: "Reversible defect"
 }
 
-    with st.form("input_form"):
-        age = st.slider("Age", 20, 100, 55)
-        sex = st.selectbox("Sex", ["Female", "Male"])
-        sex_val = 1 if sex == "Male" else 0
+with st.form("input_form"):
+    age = st.slider("Age", 20, 100, 55)
+    sex = st.selectbox("Sex", ["Female", "Male"])
+    sex_val = 1 if sex == "Male" else 0
 
-        cp = st.selectbox("Chest pain type (cp)", [0,1,2,3], index=1, format_func=lambda x: f"{x} — {cp_desc.get(x,'')}")
-        trestbps = st.number_input("Resting blood pressure (mm Hg)", 80, 220, 130)
-        chol = st.number_input("Cholesterol (mg/dl)", 100, 600, 246)
-        fbs_label = st.selectbox("Fasting blood sugar > 120 mg/dl?", ["Tidak", "Ya"])
-        fbs = 1 if fbs_label == "Ya" else 0
+    cp = st.selectbox("Chest pain type (cp)", [0,1,2,3], index=1, format_func=lambda x: f"{x} — {cp_desc.get(x,'')}")
+    trestbps = st.number_input("Resting blood pressure (mm Hg)", 80, 220, 130)
+    chol = st.number_input("Cholesterol (mg/dl)", 100, 600, 246)
+    fbs_label = st.selectbox("Fasting blood sugar > 120 mg/dl?", ["Tidak", "Ya"])
+    fbs = 1 if fbs_label == "Ya" else 0
 
-        restecg = st.selectbox("Resting ECG", [0,1,2], format_func=lambda x: f"{x} — {restecg_desc.get(x,'')}")
-        thalach = st.number_input("Max heart rate achieved", 60, 230, 150)
-        exang_label = st.selectbox("Exercise induced angina?", ["Tidak", "Ya"])
-        exang = 1 if exang_label == "Ya" else 0
+    restecg = st.selectbox("Resting ECG", [0,1,2], format_func=lambda x: f"{x} — {restecg_desc.get(x,'')}")
+    thalach = st.number_input("Max heart rate achieved", 60, 230, 150)
+    exang_label = st.selectbox("Exercise induced angina?", ["Tidak", "Ya"])
+    exang = 1 if exang_label == "Ya" else 0
 
-        oldpeak = st.number_input("ST depression induced by exercise relative to rest", 0.0, 10.0, 1.0, format="%.2f")
-        slope = st.selectbox("Slope of the peak exercise ST segment", [0,1,2], format_func=lambda x: f"{x} — {slope_desc.get(x,'')}")
-        ca = st.selectbox("Number of major vessels colored by fluoroscopy (0-4)", [0,1,2,3,4])
-        thal = st.selectbox("Thalassemia", [0,1,2,3], format_func=lambda x: f"{x} — {thal_desc.get(x,'')}")
-        # If dataset contains 'condition' (some custom column), keep it as yes/no
-        condition_label = st.selectbox('Condition (apakah ada kondisi lain?)', ['Tidak', 'Ya']) if 'condition' in X.columns else None
-        condition = 1 if condition_label == 'Ya' else 0 if condition_label is not None else None
+    oldpeak = st.number_input("ST depression induced by exercise relative to rest", 0.0, 10.0, 1.0, format="%.2f")
+    slope = st.selectbox("Slope of the peak exercise ST segment", [0,1,2], format_func=lambda x: f"{x} — {slope_desc.get(x,'')}")
+    ca = st.selectbox("Number of major vessels colored by fluoroscopy (0-4)", [0,1,2,3,4])
+    thal = st.selectbox("Thalassemia", [0,1,2,3], format_func=lambda x: f"{x} — {thal_desc.get(x,'')}")
+    condition_label = st.selectbox('Condition (apakah ada kondisi lain?)', ['Tidak', 'Ya']) if 'condition' in X.columns else None
+    condition = 1 if condition_label == 'Ya' else 0 if condition_label is not None else None
 
-        submit = st.form_submit_button("Run Heart Risk Assessment")
+    submit = st.form_submit_button("Run Heart Risk Assessment")
 
-    if submit:
-        # build input dict only with columns present in model training
-        input_dict = {
-            "age": age,
-            "sex": sex_val,
-            "cp": cp,
-            "trestbps": trestbps,
-            "chol": chol,
-            "fbs": fbs,
-            "restecg": restecg,
-            "thalach": thalach,
-            "exang": exang,
-            "oldpeak": oldpeak,
-            "slope": slope,
-            "ca": ca,
-            "thal": thal
-        }
-        if 'condition' in X.columns:
-            input_dict['condition'] = condition
+if submit:
+    input_dict = {
+        "age": age,
+        "sex": sex_val,
+        "cp": cp,
+        "trestbps": trestbps,
+        "chol": chol,
+        "fbs": fbs,
+        "restecg": restecg,
+        "thalach": thalach,
+        "exang": exang,
+        "oldpeak": oldpeak,
+        "slope": slope,
+        "ca": ca,
+        "thal": thal
+    }
+    if 'condition' in X.columns:
+        input_dict['condition'] = condition
 
-        # only keep columns that the model expects
-        model_cols = models["X_train_cols"]
-        input_df = pd.DataFrame([input_dict])
-        input_df = input_df[[c for c in model_cols if c in input_df.columns]]
+    # only keep columns that the model expects
+    model_cols = models["X_train_cols"]
+    input_df = pd.DataFrame([input_dict])
+    input_df = input_df[[c for c in model_cols if c in input_df.columns]]
 
-        ensemble = models["ensemble"]
-        try:
-            proba = ensemble.predict_proba(input_df)[0][1] * 100
-        except Exception:
-            # if predict_proba not available or error, fallback to predict and low confidence
-            pred_label = ensemble.predict(input_df)[0]
-            proba = 100.0 if pred_label == 1 else 0.0
+    ensemble = models["ensemble"]
+    try:
+        proba = ensemble.predict_proba(input_df)[0][1] * 100
+    except Exception:
+        # if predict_proba not available or error, fallback to predict and low confidence
+        pred_label = ensemble.predict(input_df)[0]
+        proba = 100.0 if pred_label == 1 else 0.0
 
-        pred = 1 if proba >= 50 else 0
+    pred = 1 if proba >= 50 else 0
 
-        # risk levels
-        if proba >= 70:
-            risk = ("TINGGI (HIGH RISK)", "#b91c1c", "Segera konsultasi dokter kardiologi.")
-        elif proba >= 35:
-            risk = ("SEDANG (MEDIUM RISK)", "#ea580c", "Perlu pemantauan dan evaluasi lebih lanjut.")
-        else:
-            risk = ("RENDAH (LOW RISK)", "#16a34a", "Risiko rendah, tetap jaga kesehatan dan lakukan pemeriksaan berkala.")
+    # risk levels
+    if proba >= 70:
+        risk = ("TINGGI (HIGH RISK)", "#b91c1c", "Segera konsultasi dokter kardiologi.")
+    elif proba >= 35:
+        risk = ("SEDANG (MEDIUM RISK)", "#ea580c", "Perlu pemantauan dan evaluasi lebih lanjut.")
+    else:
+        risk = ("RENDAH (LOW RISK)", "#16a34a", "Risiko rendah, tetap jaga kesehatan dan lakukan pemeriksaan berkala.")
 
-        label, color, advice = risk
+    label, color, advice = risk
 
-        st.markdown(
-            f"<div class='metric' style='border-left:4px solid {color};'>"
-            f"<div class='kpi'>{proba:.1f}%</div>"
-            f"<div class='small'>{label}</div>"
-            f"<div style='margin-top:8px'>{advice}</div>"
-            f"</div>",
-            unsafe_allow_html=True
-        )
+    st.markdown(
+        f"<div class='metric' style='border-left:4px solid {color};'>"
+        f"<div class='kpi'>{proba:.1f}%</div>"
+        f"<div class='small'>{label}</div>"
+        f"<div style='margin-top:8px'>{advice}</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
 
-        if pred == 1:
-            st.warning("Hasil: *Terindikasi kemungkinan penyakit jantung.* Hasil ini bukan diagnosis definitif — segera konsultasi ke profesional medis untuk pemeriksaan lanjutan.")
-        else:
-            st.success("Hasil: *Kemungkinan rendah tanda penyakit jantung.* Jaga pola hidup sehat dan lakukan pemeriksaan rutin sesuai anjuran dokter.")
+    if pred == 1:
+        st.warning("Hasil: *Terindikasi kemungkinan penyakit jantung.* Hasil ini bukan diagnosis definitif — segera konsultasi ke profesional medis untuk pemeriksaan lanjutan.")
+    else:
+        st.success("Hasil: *Kemungkinan rendah tanda penyakit jantung.* Jaga pola hidup sehat dan lakukan pemeriksaan rutin sesuai anjuran dokter.")
