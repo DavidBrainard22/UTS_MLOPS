@@ -54,12 +54,15 @@ st.markdown("""
 def load_heart_data(path=DATA_PATH):
     try:
         df = pd.read_csv(path)
-        # standardize target naming
-        if 'target' not in df.columns and 'num' in df.columns:
-            df = df.rename(columns={'num': 'target'})
-        if 'target' not in df.columns and 'heartdisease' in df.columns:
-            df = df.rename(columns={'heartdisease': 'target'})
-        return df
+       # Rename kolom target
+    if "condition" in df.columns:
+        df = df.rename(columns={"condition": "target"})
+    elif "num" in df.columns:
+        df = df.rename(columns={"num": "target"})
+    elif "target" not in df.columns:
+        raise ValueError("Dataset tidak memiliki kolom target ('condition', 'num', atau 'target').")
+    return df
+    
     except Exception:
         cols = [
             "age","sex","cp","trestbps","chol","fbs","restecg","thalach",
