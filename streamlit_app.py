@@ -326,38 +326,3 @@ if submit:
     else:
         st.success("Hasil: *Kemungkinan rendah tanda penyakit jantung.* Jaga pola hidup sehat dan lakukan pemeriksaan rutin sesuai anjuran dokter.")
 
-    # ============================
-    # 📌 Evaluasi Model (Recall, F1, Confusion Matrix)
-    # ============================
-    st.markdown("<div class='section-header'>📊 Hasil Evaluasi Model</div>", unsafe_allow_html=True)
-
-    metrics = models["metrics"]
-
-    # Tampilkan metrik dasar dalam tabel
-    eval_df = pd.DataFrame({
-        "Metrik": ["Recall", "F1-Score"],
-        "Nilai": [
-            round(metrics["recall"], 3),
-            round(metrics["f1"], 3),
-        ]
-    })
-
-    st.table(eval_df)
-
-    # ============================
-    # 📌 Confusion Matrix — Grafik
-    # ============================
-    cm = np.array(metrics["confusion_matrix"])
-
-    fig, ax = plt.subplots(figsize=(5, 4))
-    cax = ax.matshow(cm, cmap="Blues")
-    fig.colorbar(cax)
-
-    for (i, j), value in np.ndenumerate(cm):
-        ax.text(j, i, f"{value}", ha="center", va="center", color="black", fontsize=12)
-
-    ax.set_xlabel("Predicted Label")
-    ax.set_ylabel("True Label")
-    ax.set_title("Confusion Matrix")
-
-    st.pyplot(fig)
