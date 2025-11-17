@@ -326,33 +326,38 @@ if submit:
     else:
         st.success("Hasil: *Kemungkinan rendah tanda penyakit jantung.* Jaga pola hidup sehat dan lakukan pemeriksaan rutin sesuai anjuran dokter.")
 
-# ==========================
-# EVALUASI MODEL
-# ==========================
-st.markdown('<div class="section-header">📊 Model Evaluation</div>', unsafe_allow_html=True)
+    # ============================
+    # 📌 Evaluasi Model (Recall, F1, Confusion Matrix)
+    # ============================
+    st.markdown("<div class='section-header'>📊 Hasil Evaluasi Model</div>", unsafe_allow_html=True)
 
-metrics = models["metrics"]
-recall_val = metrics.get("recall", None)
-f1_val = metrics.get("f1", None)
-cm = metrics.get("confusion_matrix", None)
+    metrics = models["metrics"]
 
-# Tampilkan Recall & F1-score
-st.write(f"**Recall:** {recall_val:.3f}")
-st.write(f"**F1-Score:** {f1_val:.3f}")
+    # Tampilkan metrik dasar dalam tabel
+    eval_df = pd.DataFrame({
+        "Metrik": ["Recall", "F1-Score"],
+        "Nilai": [
+            round(metrics["recall"], 3),
+            round(metrics["f1"], 3),
+        ]
+    })
 
-# Tampilkan Confusion Matrix
-st.write("### Confusion Matrix")
-fig, ax = plt.subplots(figsize=(4, 3))
+    st.table(eval_df)
 
-cm_display = np.array(cm)
+    # ============================
+    # 📌 Confusion Matrix — Grafik
+    # ============================
+    cm = np.array(metrics["confusion_matrix"])
 
-ax.matshow(cm_display, cmap="Blues")
-for i in range(cm_display.shape[0]):
-    for j in range(cm_display.shape[1]):
-        ax.text(j, i, str(cm_display[i, j]), va='center', ha='center')
+    fig, ax = plt.subplots(figsize=(5, 4))
+    cax = ax.matshow(cm, cmap="Blues")
+    fig.colorbar(cax)
 
-ax.set_xlabel("Predicted Label")
-ax.set_ylabel("True Label")
-ax.set_title("Confusion Matrix")
+    for (i, j), value in np.ndenumerate(cm):
+        ax.text(j, i, f"{value}", ha="center", va="center", color="black", fontsize=12)
 
-st.pyplot(fig)
+    ax.set_xlabel("Predicted Label")
+    ax.set_ylabel("True Label")
+    ax.set_title("Confusion Matrix")
+
+    st.pyplot(fig)
